@@ -6,4 +6,5 @@ edition = "2021"
 publish = false
 
 [dependencies]
-rocket = { version = "0.5.0-rc.1", features = ["tls", "mtls"] }
+rocket = { version = "0.5.0-rc.2", features = ["json", "tls"] }
+serde = { version = "1.0", features = ["derive"] }

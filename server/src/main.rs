@@ -9,7 +9,8 @@
 //     format!("Hello! Here's what we know: [{}] {}", cert.serial(), cert.subject())
 // }
 
-#[get("/", rank = 2)]
+
+#[get("/")]
 fn hello() -> &'static str {
     "Hello, world!"
 }
@@ -29,8 +30,5 @@ fn rocket() -> _ {
     //     tls: Some(tls_config),
     //      ..Default::default()};
     // rocket::custom(config);
-
-
-
     rocket::build().mount("/", routes![hello, set])
 }

@@ -1,19 +1,38 @@
 use std::fs::File;
 use std::io::Read;
-use reqwest::{Body, Client, Certificate};
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
-
+use reqwest::{Client};
+use reqwest::header::{HeaderMap, HeaderValue};
 
 // fn load_cert() -> reqwest::Result<reqwest::Certificate> {
-//     // let mut buf = Vec::new();
-//     // File::open("private/ca_cert.pem")
-//     //     .unwrap()
-//     //     .read_to_end(&mut buf)
-//     //     .unwrap();
-//     let cert = std::fs::read("private/ca_cert.pem").unwrap();
-//     reqwest::Certificate::from_der(&cert)
+//     let mut buf = Vec::new();
+//     File::open("private/ca_cert.pem")
+//         .unwrap()
+//         .read_to_end(&mut buf)
+//         .unwrap();
+//     reqwest::Certificate::from_pem(&buf)
 // }
 
+// fn pkcs12() -> reqwest::Result<reqwest::Identity>{
+//     let mut buf = Vec::new();
+//     File::open("private/client_rsa_sha256.p12").unwrap().read_to_end(&mut buf).unwrap();
+//     reqwest::Identity::from_pkcs12_der(&buf,"rocket")
+// }
+fn load_cert() -> reqwest::Result<reqwest::Certificate> {
+    let mut buf = Vec::new();
+    File::open("private/ca_cert.der")
+        .unwrap()
+        .read_to_end(&mut buf)
+        .unwrap();
+    reqwest::Certificate::from_der(&buf)
+}
+fn pem() -> reqwest::Result<reqwest::tls::Identity>{
+    let mut buf = Vec::new();
+    File::open("private/client.pem")
+        .unwrap()
+        .read_to_end(&mut buf)
+        .unwrap();
+    reqwest::tls::Identity::from_pem(&buf)
+}
 
 fn new_client_with_headers() -> Client {
     let mut headers = HeaderMap::new();
@@ -25,12 +44,14 @@ fn new_client_with_headers() -> Client {
         "Accept",
         HeaderValue::from_static("application/json; charset=utf-8"),
     );
-    let cert = std::fs::read("private/ca_cert.pem").unwrap();
-    let cert = reqwest::Certificate::from_pem(&cert).unwrap();
-    Client::builder().danger_accept_invalid_certs(true)
-        .use_native_tls()
-        .add_root_certificate(cert)
+    let cert = load_cert().unwrap();
+    let identity = pem().unwrap();
+    Client::builder()
+        .use_rustls_tls()
         .default_headers(headers)
+        .add_root_certificate(cert)
+        .danger_accept_invalid_certs(true)
+        .identity(identity)
         .build()
         .unwrap()
 }
@@ -62,7 +83,25 @@ where
 #[tokio::main]
 async fn main() {
     let client = new_client_with_headers();
-    let addr = "https://127.0.0.1:8000";
+    let addr = "https://127.0.0.1:8000/set";
     let entry = "";
     let res_body = postb(&client, addr, "/", entry).await;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
